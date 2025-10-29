@@ -1,0 +1,16 @@
+# Environ virtuel
+virtuel/
+
+# Secrets
+.env
+*.pyo
+*.pyd
+.Python
+
+# Django généré
+staticfiles/
+db.sqlite3
+
+# Python
+__pycache__/
+*.pyc
