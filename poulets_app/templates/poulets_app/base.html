@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DjodeSync - Gestion des Poulets{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/charte.css' %}">
+    <!-- Placeholder pour logo : remplace par ton image -->
+    <style>
+        .logo { width: 50px; height: auto; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{% static 'images/logo.png' %}" alt="DjodeSync Logo" class="logo">  <!-- Ajoute ton logo ici -->
+        <h1>DjodeSync</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'bande_list' %}">Bandes</a></li>
+                <li><a href="{% url 'stock_list' %}">Stocks</a></li>
+                <li><a href="{% url 'vente_list' %}">Ventes</a></li>
+                <li><a href="{% url 'deces_list' %}">Santé</a></li>
+                <li><a href="{% url 'rapport_rendement' %}">Rapports</a></li>
+                <li><a href="{% url 'logout' %}">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer>
+        &copy; 2025 DjodeSync - Gestion des poulets de chair. Tous droits réservés.
+    </footer>
+</body>
+</html>

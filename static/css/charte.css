@@ -1,0 +1,90 @@
+:root {
+    --blanc-creme: #FAF9F6;  /* Fond plumage */
+    --rouge-crete: #DC143C;   /* Alertes */
+    --jaune-bec: #FAD5A5;     /* Boutons/icônes */
+    --vert-ferme: #556B2F;    /* Headers/nav */
+    --brun-terre: #8B4513;    /* Footers/ombres */
+    --bleu-sync: #003366;     /* Texte principal/nom app */
+}
+
+body {
+    background-color: var(--blanc-creme);
+    color: var(--bleu-sync);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--vert-ferme);
+    color: var(--blanc-creme);
+    padding: 10px;
+    text-align: center;
+}
+
+h1 {
+    color: var(--bleu-sync);
+    margin: 0;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    background-color: var(--jaune-bec);
+    display: flex;
+    justify-content: center;
+}
+
+nav li {
+    margin: 0 15px;
+}
+
+nav a {
+    color: var(--brun-terre);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+main {
+    padding: 20px;
+    min-height: 70vh;
+}
+
+footer {
+    background-color: var(--brun-terre);
+    color: var(--blanc-creme);
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.alert-sante {
+    color: var(--rouge-crete);
+    font-weight: bold;
+}
+
+button, .btn {
+    background-color: var(--jaune-bec);
+    border: 1px solid var(--brun-terre);
+    color: var(--brun-terre);
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--rouge-crete);
+    color: var(--blanc-creme);
+}
+.logo-img {
+    width: 80px;  /* Taille fixe, ajuste selon ton image */
+    height: auto;  /* Garde proportions */
+    float: left;   /* Position à gauche */
+    margin-right: 10px;  /* Espace avec titre */
+    vertical-align: middle;  /* Aligné au milieu */
+}
+
+header {
+    overflow: hidden;  /* Pour float sans débordement */
+}
