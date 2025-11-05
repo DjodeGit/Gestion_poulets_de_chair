@@ -6,40 +6,57 @@
     <title>{% block title %}DjodeSync - Gestion des Poulets{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/charte.css' %}">
-    <!-- Placeholder pour logo : remplace par ton image -->
-    <style>
-        .logo { width: 50px; height: auto; vertical-align: middle; }
-    </style>
 </head>
 <body>
     <header>
-        <img src="{% static 'images/img1.jpg' %}" alt="DjodeSync Logo" class="logo-img">  <!-- Ajoute ton logo ici -->
-        <h1>DjodeSync</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li><a href="{% url 'bande_list' %}">Bandes</a></li>
-                <li><a href="{% url 'stock_list' %}">Stocks</a></li>
-                <li><a href="{% url 'vente_list' %}">Ventes</a></li>
-                <li><a href="{% url 'deces_list' %}">Santé</a></li>
-                <li><a href="{% url 'rapport_rendement' %}">Rapports</a></li>
-                <li><a href="{% url 'logout' %}">Déconnexion</a></li>
-            </ul>
-        </nav>
+        <div class="header-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo DjodeSync - Poulet de chair" class="logo-img" aria-label="Logo">
+            <h1>DjodeSync</h1>
+        </div>
+        {% if user.is_authenticated %}
+            <nav class="nav-bar" role="navigation">
+                <ul>
+                    {% if user.role == 'client' %}
+                        <!-- Nav limitée pour client -->
+                        <li><a href="{% url 'catalogue' %}">Catalogue</a></li>
+                        <li><a href="{% url 'mes_commandes' %}">Mes Commandes</a></li>
+                        <li><a href="{% url 'support' %}">Support</a></li>
+                    {% else %}
+                        <!-- Nav complète pour employé/admin -->
+                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'bande_list' %}">Bandes</a></li>
+                        <li><a href="{% url 'stock_list' %}">Stocks</a></li>
+                        <li><a href="{% url 'vente_list' %}">Ventes</a></li>
+                        <li><a href="{% url 'deces_list' %}">Santé</a></li>
+                        <li><a href="{% url 'rapport_rendement' %}">Rapports</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'logout' %}">Déconnexion</a></li>
+                </ul>
+            </nav>
+        {% else %}
+            <nav class="nav-bar guest">
+                <ul>
+                    <li><a href="{% url 'login' %}">Connexion</a></li>
+                    <li><a href="{% url 'inscription_client' %}">S'inscrire</a></li>
+                </ul>
+            </nav>
+        {% endif %}
     </header>
-    <main>
+    <main role="main">
         {% if messages %}
-            <ul class="messages">
+            <div class="messages">
                 {% for message in messages %}
-                    <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                    <div class="message {{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% endif %}
         {% block content %}
         {% endblock %}
     </main>
-    <footer>
-        &copy; 2025 DjodeSync - Gestion des poulets de chair. Tous droits réservés.
+    <footer role="contentinfo">
+        &copy; 2025 DjodeSync - Gestion des poulets de chair. Tous droits réservés. | <a href="/support/">Support</a>
     </footer>
 </body>
 </html>
