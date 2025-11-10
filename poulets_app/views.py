@@ -8,8 +8,7 @@ def dashboard(request):
     return render(request, 'poulets_app/base.html')
 
 # Accueil (teste base.html)
-def test_base(request):
-    return render(request, 'poulets_app/test_base.html')
+
 
 # Dashboard (interne)
 def dashboard(request):
