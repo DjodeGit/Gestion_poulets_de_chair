@@ -1,0 +1,118 @@
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Bandes – DjodeSync{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">Liste des bandes</h1>
+    <p class="text-gray-600 mt-1">{{ bandes.paginator.count }} bande{{ bandes.paginator.count|pluralize:"s" }} enregistrée{{ bandes.paginator.count|pluralize }}</p>
+  </div>
+  <a href="{% url 'admin:poulets_app_bande_add' %}"
+     class="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:from-red-700 hover:to-red-800 transform hover:-translate-y-1 transition">
+    <i class="fas fa-plus mr-2"></i> Nouvelle bande
+  </a>
+</div>
+
+<!-- Barre de recherche + filtres -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div>
+      <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Rechercher (numéro, gamme, bâtiment...)"
+             class="w-full px-5 py-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition">
+    </div>
+    <div>
+      <select name="statut" class="w-full px-5 py-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100">
+        <option value="">Tous les statuts</option>
+        <option value="en_croissance" {% if request.GET.statut == 'en_croissance' %}selected{% endif %}>En croissance</option>
+        <option value="pret_vente" {% if request.GET.statut == 'pret_vente' %}selected{% endif %}>Prête à vendre</option>
+        <option value="vendue" {% if request.GET.statut == 'vendue' %}selected{% endif %}>Vendue</option>
+      </select>
+    </div>
+    <div class="flex items-end">
+      <button type="submit"
+              class="w-full px-8 py-3.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-md">
+        <i class="fas fa-search mr-2"></i> Rechercher
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Tableau des bandes -->
+<div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+  <table class="w-full">
+    <thead class="bg-gradient-to-r from-red-600 to-red-700 text-white">
+      <tr>
+        <th class="px-6 py-5 text-left font-bold">N° Bande</th>
+        <th class="px-6 py-5 text-left font-bold">Gamme</th>
+        <th class="px-6 py-5 text-left font-bold">Bâtiment</th>
+        <th class="px-6 py-5 text-left font-bold">Arrivée</th>
+        <th class="px-6 py-5 text-left font-bold">Âge</th>
+        <th class="px-6 py-5 text-left font-bold">Effectif</th>
+        <th class="px-6 py-5 text-left font-bold">Statut</th>
+        <th class="px-6 py-5 text-center font-bold">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      {% for bande in bandes %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-6 py-5 font-bold text-red-600">#{{ bande.numero }}</td>
+        <td class="px-6 py-5">{{ bande.gamme }}</td>
+        <td class="px-6 py-5">{{ bande.batiment }}</td>
+        <td class="px-6 py-5">{{ bande.date_arrivee|date:"d/m/Y" }}</td>
+        <td class="px-6 py-5">
+          <span class="font-semibold text-gray-800">{{ bande.age_jours }} jour{{ bande.age_jours|pluralize }}</span>
+        </td>
+        <td class="px-6 py-5">
+          <span class="font-bold text-lg">{{ bande.quantite_actuelle }}</span>
+          <span class="text-gray-500"> / {{ bande.quantite_initiale }}</span>
+        </td>
+        <td class="px-6 py-5">
+          {% if bande.statut == 'en_croissance' %}
+            <span class="px-4 py-2 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">En croissance</span>
+          {% elif bande.statut == 'pret_vente' %}
+            <span class="px-4 py-2 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Prête à vendre</span>
+          {% else %}
+            <span class="px-4 py-2 rounded-full text-xs font-bold bg-gray-100 text-gray-700">Vendue</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-5 text-center">
+          <a href="{% url 'admin:poulets_app_bande_change' bande.id %}"
+             class="inline-flex items-center px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+            <i class="fas fa-edit mr-2"></i> Modifier
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="px-6 py-16 text-center text-gray-500">
+          <i class="fas fa-dove text-6xl mb-4 text-gray-300"></i>
+          <p class="text-xl">Aucune bande enregistrée pour le moment.</p>
+          <a href="{% url 'admin:poulets_app_bande_add' %}" class="text-red-600 hover:underline font-medium">Créer la première bande ?</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="bg-gray-50 px-6 py-4 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+      Page {{ page_obj.number }} sur {{ paginator.num_pages }}
+    </div>
+    <div class="space-x-3">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}"
+           class="px-5 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">Précédent</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}"
+           class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Suivant</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
