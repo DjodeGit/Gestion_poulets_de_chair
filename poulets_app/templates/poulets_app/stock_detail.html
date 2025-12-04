@@ -1,0 +1,119 @@
+{% extends "poulets_app/base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ article.nom }} – Stock – DjodeSync{% endblock %}
+
+{% block content %}
+<div class="mb-10">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h1 class="text-5xl font-black text-gray-900">{{ article.nom }}</h1>
+      <p class="text-2xl text-gray-600 mt-2">
+        {{ article.get_type_aliment_display }}
+        {% if article.est_en_rupture %}
+          <span class="ml-4 px-6 py-3 bg-red-600 text-white font-bold rounded-full animate-pulse">RUPTURE DE STOCK</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="mt-6 lg:mt-0 flex space-x-4">
+      <a href="{% url 'admin:poulets_app_stock_change' article.id %}"
+         class="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 shadow-xl transform hover:-translate-y-1 transition">
+        <i class="fas fa-edit mr-2"></i> Modifier
+      </a>
+      <button onclick="document.getElementById('modal-mouvement').classList.remove('hidden')"
+              class="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl hover:from-red-700 hover:to-red-800 shadow-xl transform hover:-translate-y-1 transition">
+        <i class="fas fa-exchange-alt mr-2"></i> Nouveau mouvement
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Cartes indicateurs -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 border-t-8 {% if article.est_en_rupture %}border-red-600{% else %}border-emerald-600{% endif %}">
+    <p class="text-gray-500 text-lg">Stock actuel</p>
+    <p class="text-6xl font-black {% if article.est_en_rupture %}text-red-600{% else %}text-emerald-700{% endif %}">
+      {{ article.quantite_actuelle|floatformat:1 }} <span class="text-3xl">{{ article.unite }}</span>
+    </p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-2xl p-8 border-t-8 border-blue-600">
+    <p class="text-gray-500 text-lg">Seuil alerte</p>
+    <p class="text-6xl font-black text-blue-700">{{ article.seuil_alerte }} {{ article.unite }}</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-2xl p-8 border-t-8 border-amber-600">
+    <p class="text-gray-500 text-lg">Total entrées (30j)</p>
+    <p class="text-6xl font-black text-amber-700">
+      {% with total_entree=article.mouvements.filter(type_mouvement='entree').aggregate(t=models.Sum('quantite'))['t'] %}
+        {{ total_entree|default:0|floatformat:1 }}
+      {% endwith %} {{ article.unite }}
+    </p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-2xl p-8 border-t-8 border-purple-600">
+    <p class="text-gray-500 text-lg">Total sorties (30j)</p>
+    <p class="text-6xl font-black text-purple-700">
+      {% with total_sortie=article.mouvements.filter(type_mouvement='sortie').aggregate(t=models.Sum('quantite'))['t'] %}
+        {{ total_sortie|default:0|floatformat:1 }}
+      {% endwith %} {{ article.unite }}
+    </p>
+  </div>
+</div>
+
+<!-- Graphique évolution stock -->
+<div class="bg-white rounded-2xl shadow-2xl p-10 mb-10">
+  <h2 class="text-3xl font-bold text-gray-800 mb-8">Évolution du stock (30 derniers jours)</h2>
+  <canvas id="chartStock" height="100"></canvas>
+</div>
+
+<!-- Derniers mouvements -->
+<div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+  <div class="px-10 py-6 bg-gradient-to-r from-red-600 to-red-700 text-white">
+    <h2 class="text-3xl font-bold">Derniers mouvements</h2>
+  </div>
+  <table class="w-full">
+    <tbody class="divide-y divide-gray-200">
+      {% for m in mouvements_recents|slice:":10" %}
+      <tr class="hover:bg-gray-50">
+        <td class="px-10 py-6 font-medium">{{ m.date|date:"d/m/Y" }}</td>
+        <td class="px-10 py-6 text-center">
+          {% if m.type_mouvement == 'entree' %}
+            <span class="px-6 py-3 bg-emerald-600 text-white font-bold rounded-full">+{{ m.quantite }}</span>
+          {% else %}
+            <span class="px-6 py-3 bg-red-600 text-white font-bold rounded-full">-{{ m.quantite }}</span>
+          {% endif %}
+        </td>
+        <td class="px-10 py-6 text-gray-700">{{ m.motif|default:"—" }}</td>
+        <td class="px-10 py-6 text-gray-500 text-sm">{{ m.responsable|default:"Système" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="text-center py-20 text-gray-500">Aucun mouvement récent</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Script graphique -->
+<!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  new Chart(document.getElementById('chartStock'), {
+    type: 'line',
+    data: {
+      labels: {{ graphique_data.labels|safe }},
+      datasets: [{
+        label: 'Stock ({{ article.unite }})',
+        data: {{ graphique_data.quantites|safe }},
+        borderColor: '#dc2626',
+        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#dc2626',
+        pointRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>-->
+{% endblock %}
