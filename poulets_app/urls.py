@@ -1,13 +1,15 @@
 from django.urls import path
 from . import views
+from .views import BandeListView,StockListView,StockDetailView,VenteListView,DecesListView
 
 urlpatterns = [
     path('', views.test_base, name='test_base'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('bandes/', views.bande_list, name='bande_list'),
-    path('stocks/', views.stock_list, name='stock_list'),
-    path('ventes/', views.vente_list, name='vente_list'),
-    path('sante/', views.deces_list, name='deces_list'),
+    path('bandes/', BandeListView.as_view(), name='bande-list'),
+    path('stocks/', StockListView.as_view(), name='stock-list'),
+    path('stock/<int:pk>/', StockDetailView.as_view(), name='stock-detail'),
+    path('ventes/', VenteListView.as_view(), name='vente-list'),
+    path('deces/', DecesListView.as_view(), name='deces-list'),
     path('rapports/rendement/', views.rapport_rendement, name='rapport_rendement'),
     path('logout/', views.logout_view, name='logout'),
     # Vues client
@@ -16,4 +18,5 @@ urlpatterns = [
     path('support/', views.support, name='support'),
     path('login/', views.login_view, name='login'),
     path('inscription-client/', views.inscription_client, name='inscription_client'),
+    path('profile/', views.dashboard, name='profile'),
 ]
