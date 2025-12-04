@@ -1,6 +1,108 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load custom_filters %}
+{% load static humanize %}
+
+{% block title %}Stocks & Provendes – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>stock_list Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="mb-10">
+  <h1 class="text-4xl font-black text-gray-900">Gestion des stocks</h1>
+  <p class="text-xl text-gray-600 mt-2">Suivi complet des aliments, médicaments et intrants</p>
+</div>
+
+<!-- Résumé rapide -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+  <div class="bg-white rounded-2xl shadow-xl p-8 border-t-4 border-red-600">
+    <p class="text-gray-500">Articles en alerte</p>
+    <p class="text-5xl font-black text-red-600">
+      {{ articles|length|default:0 }} <span class="text-3xl">en rupture</span>
+    </p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-xl p-8 border-t-4 border-blue-600">
+    <p class="text-gray-500">Types d'aliments</p>
+    <p class="text-5xl font-black text-blue-700">5</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-xl p-8 border-t-4 border-emerald-600">
+    <p class="text-gray-500">Stock total (kg)</p>
+    <p class="text-5xl font-black text-emerald-700">
+      {% load custom_filters %}
+      {{ articles|total_stock_kg|floatformat:0|intcomma }}
+    </p>
+  </div>
+  <div class="bg-white rounded-2xl shadow-xl p-8 border-t-4 border-amber-600">
+    <p class="text-gray-500">Dernière entrée</p>
+    <p class="text-4xl font-black text-amber-700">Il y a 2j</p>
+  </div>
+</div>
+
+<!-- Bouton ajout + recherche -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+  <a href="{% url 'admin:poulets_app_stock_add' %}"
+     class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold text-lg rounded-xl shadow-xl hover:from-red-700 hover:to-red-800 transform hover:-translate-y-1 transition">
+    <i class="fas fa-plus mr-3"></i> Nouvel article
+  </a>
+
+  <input type="text" placeholder="Rechercher un article..."
+         class="px-6 py-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 w-full sm:w-96">
+</div>
+
+<!-- Tableau -->
+<div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+  <table class="w-full">
+    <thead class="bg-gradient-to-r from-red-600 to-red-700 text-white">
+      <tr>
+        <th class="px-8 py-5 text-left font-bold">Article</th>
+        <th class="px-8 py-5 text-left font-bold">Type</th>
+        <th class="px-8 py-5 text-center font-bold">Stock actuel</th>
+        <th class="px-8 py-5 text-center font-bold">Seuil alerte</th>
+        <th class="px-8 py-5 text-center font-bold">Statut</th>
+        <th class="px-8 py-5 text-center font-bold">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      {% for article in articles %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-8 py-6 font-semibold text-gray-900">{{ article.nom }}</td>
+        <td class="px-8 py-6">
+          <span class="px-4 py-2 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+            {{ article.get_type_aliment_display }}
+          </span>
+        </td>
+        <td class="px-8 py-6 text-center">
+          <span class="text-2xl font-bold text-gray-800">
+            {{ article.quantite_actuelle }} {{ article.unite }}
+          </span>
+        </td>
+        <td class="px-8 py-6 text-center text-gray-600">
+          {{ article.seuil_alerte }} {{ article.unite }}
+        </td>
+        <td class="px-8 py-6 text-center">
+          {% if article.est_en_rupture %}
+            <span class="px-5 py-2 rounded-full text-white font-bold bg-red-600 animate-pulse">
+              RUPTURE
+            </span>
+          {% else %}
+            <span class="px-5 py-2 rounded-full text-white font-bold bg-emerald-600">
+              OK
+            </span>
+          {% endif %}
+        </td>
+        <td class="px-8 py-6 text-center space-x-3">
+          <a href="{% url 'admin:poulets_app_stock_change' article.id %}" class="text-red-600 hover:text-red-800 font-bold">
+            <i class="fas fa-edit"></i> Modifier
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="px-8 py-20 text-center text-gray-500">
+          <i class="fas fa-warehouse text-8xl mb-6 text-gray-300"></i>
+          <p class="text-2xl">Aucun article en stock</p>
+          <a href="{% url 'admin:poulets_app_stock_add' %}" class="text-red-600 hover:underline font-bold">Ajouter le premier ?</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
