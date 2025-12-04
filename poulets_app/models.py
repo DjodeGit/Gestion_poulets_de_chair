@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
+
 # Create your models here.
 class Ferme(models.Model):
     nom = models.CharField(max_length=100)
@@ -67,13 +70,34 @@ class Lot(models.Model):
         return f"{self.type} - {self.quantite} ({self.fournisseur.nom})"
 
 class Stock(models.Model):
-    quantite_dispo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    seuil_min = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('100.00'))
-    lot = models.OneToOneField(Lot, on_delete=models.CASCADE, related_name='stock')
+    TYPE_ALIMENT = [
+        ('demarrage', 'Démarrage'),
+        ('croissance', 'Croissance'),
+        ('finition', 'Finition'),
+        ('pre_finition', 'Pré-finition'),
+        ('medicament', 'Médicament'),
+        ('autre', 'Autre'),
+    ]
+
+    nom = models.CharField(max_length=100, verbose_name="Nom de l'article",default='Article sans nom',blank=True,)
+    type_aliment = models.CharField(max_length=20, choices=TYPE_ALIMENT, default='autre')
+    quantite_actuelle = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Stock actuel")
+    unite = models.CharField(max_length=10, default="kg", choices=[('kg','kg'), ('sac','sac'), ('litre','litre')])
+    seuil_alerte = models.DecimalField(max_digits=10, decimal_places=2, default=100, verbose_name="Seuil alerte")
+
+    cree_le = models.DateTimeField(default=timezone.now, editable=False,null=True, blank=True)
+    modifie_le = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Article en stock"
+        ordering = ['nom']
+
+    def __str__(self):
+        return f"{self.nom} ({self.get_type_aliment_display()})"
 
     def est_en_rupture(self):
-        return self.quantite_dispo < self.seuil_min
-
+        return self.quantite_actuelle <= self.seuil_alerte
+    est_en_rupture.boolean = True
 class Achat(models.Model):
     date = models.DateField(auto_now_add=True)
     quantite_achetee = models.PositiveIntegerField()
@@ -119,3 +143,206 @@ class Medicament(models.Model):
 
     def __str__(self):
         return f"{self.nom} pour Bande {self.bande.id}"
+class Pesee(models.Model):
+    """
+    Pesée quotidienne ou hebdomadaire d'une bande
+    """
+    bande = models.ForeignKey(
+        'Bande',
+        on_delete=models.CASCADE,
+        related_name='pesee_set',
+        verbose_name="Bande"
+    )
+    
+    date = models.DateField(
+        verbose_name="Date de pesée",
+        help_text="Date à laquelle la pesée a été effectuée"
+    )
+    
+    poids_moyen = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        validators=[MinValueValidator(Decimal('0.001'))],
+        verbose_name="Poids moyen (kg)",
+        help_text="Exemple : 1.850 kg"
+    )
+    
+    nombre_poulets_peses = models.PositiveIntegerField(
+        default=100,
+        verbose_name="Nombre de poulets pesés",
+        help_text="Échantillon représentatif (minimum 100 recommandé)"
+    )
+    
+    homogeneite = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Homogénéité (%)",
+        help_text="Coefficient de variation. Optionnel, calculable automatiquement plus tard"
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Observations",
+        help_text="Commentaires sur la pesée (santé, stress, etc.)"
+    )
+    
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Pesée"
+        verbose_name_plural = "Pesées"
+        ordering = ['-date']
+        unique_together = ('bande', 'date')  # une seule pesée par jour et par bande
+
+    def __str__(self):
+        return f"{self.bande} – {self.date} : {self.poids_moyen} kg"
+
+    def save(self, *args, **kwargs):
+        # Optionnel : arrondir à 3 décimales
+        if self.poids_moyen:
+            self.poids_moyen = round(self.poids_moyen, 3)
+        super().save(*args, **kwargs)
+
+class Mortalite(models.Model):
+    """
+    Mortalité quotidienne d'une bande
+    """
+    bande = models.ForeignKey(
+        'Bande',
+        on_delete=models.CASCADE,
+        related_name='mortalite_set',
+        verbose_name="Bande"
+    )
+    
+    date = models.DateField(
+        verbose_name="Date",
+        help_text="Date du relevé de mortalité"
+    )
+    
+    nombre = models.PositiveIntegerField(
+        verbose_name="Nombre de morts",
+        help_text="Nombre de poulets morts ce jour"
+    )
+    
+    CAUSE_CHOICES = [
+        ('maladie', 'Maladie'),
+        ('chaleur', 'Chaleur / Stress thermique'),
+        ('froid', 'Froid'),
+        ('asphyxie', 'Asphyxie'),
+        ('ecrasement', 'Écrasement'),
+        ('cannibalisme', 'Cannibalisme'),
+        ('autre', 'Autre / Inconnu'),
+    ]
+    
+    cause = models.CharField(
+        max_length=20,
+        choices=CAUSE_CHOICES,
+        default='autre',
+        verbose_name="Cause principale"
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Observations",
+        help_text="Symptômes observés, traitement appliqué, etc."
+    )
+    
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Mortalité"
+        verbose_name_plural = "Mortalités"
+        ordering = ['-date']
+        unique_together = ('bande', 'date')  # une seule saisie par jour
+
+    def __str__(self):
+        return f"{self.bande} – {self.date} : {self.nombre} morts ({self.get_cause_display})"
+
+class Alimentation(models.Model):
+    """
+    Consommation d'aliment par bande
+    """
+    bande = models.ForeignKey(
+        'Bande',
+        on_delete=models.CASCADE,
+        related_name='alimentation_set',
+        verbose_name="Bande"
+    )
+    
+    date = models.DateField(
+        verbose_name="Date de distribution"
+    )
+    
+    type_aliment = models.CharField(
+        max_length=50,
+        verbose_name="Type d'aliment",
+        help_text="Ex: Démarrage, Croissance, Finition, Pré-finition"
+    )
+    
+    quantite_kg = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Quantité distribuée (kg)"
+    )
+    
+    stock_provenance = models.ForeignKey(
+        'Stock',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='alimentations',
+        verbose_name="Provenance stock"
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Remarques"
+    )
+    
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Alimentation"
+        verbose_name_plural = "Alimentations"
+        ordering = ['-date']
+        unique_together = ('bande', 'date', 'type_aliment')
+
+    def __str__(self):
+        return f"{self.bande} – {self.date} : {self.quantite_kg} kg {self.type_aliment}"
+
+
+
+
+class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('admin', 'Administrateur'),
+        ('employe', 'Employé'),
+        ('client', 'Client'),
+    ]
+    
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='employe',
+        verbose_name="Rôle"
+    )
+
+    # Résout le clash avec auth.User
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='poulets_user_groups',
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='poulets_user_permissions',
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.username
