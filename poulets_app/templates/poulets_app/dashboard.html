@@ -1,6 +1,75 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>Dashboard Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Tableau de bord</h1>
+    <p class="text-gray-600 mt-2">Bienvenue, <strong>{{ user.get_full_name|default:user.username }}</strong> ! Voici l’état de votre ferme aujourd’hui.</p>
+</div>
+
+<!-- Cartes statistiques -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-red-600">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-gray-500 text-sm">Total Bandes</p>
+            <p class="text-3xl font-bold text-gray-800">{{ total_bandess }}</p>
+        </div>
+        <i class="fas fa-dove text-4xl text-red-600 opacity-80"></i>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-700">
+        <div class="flex items-center justify-between">
+        <div>
+            <p class="text-gray-500 text-sm">Bandes actives</p>
+            <p class="text-3xl font-bold text-gray-800">{{ bandes_actives }}</p>
+        </div>
+        <i class="fas fa-play-circle text-4xl text-blue-700 opacity-80"></i>
+        </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-emerald-600">
+<div class="flex items-center justify-between">
+    <div>
+    <p class="text-gray-500 text-sm">Poulets en élevage</p>
+    <p class="text-3xl font-bold text-gray-800">{{ poulets_total }}</p>
+    </div>
+    <i class="fas fa-egg text-4xl text-emerald-600 opacity-80"></i>
+</div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-amber-600">
+<div class="flex items-center justify-between">
+    <div>
+    <p class="text-gray-500 text-sm">Ventes du mois (FCFA)</p>
+    <p class="text-3xl font-bold text-gray-800">{{ ventes_mois|floatformat:0 }}</p>
+    </div>
+    <i class="fas fa-coins text-4xl text-amber-600 opacity-80"></i>
+</div>
+</div>
+</div>
+
+<!-- Section raccourcis -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <a href="{% url 'bande-list' %}" class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-8 text-center hover:transform hover:scale-105 transition shadow-lg">
+        <i class="fas fa-dove text-5xl mb-4"></i>
+        <h3 class="text-xl font-bold">Gérer les bandes</h3>
+        <p class="mt-2 opacity-90">Suivi quotidien, poids, mortalité</p>
+    </a>
+
+    <a href="{% url 'vente-list' %}" class="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl p-8 text-center hover:transform hover:scale-105 transition shadow-lg">
+        <i class="fas fa-shopping-cart text-5xl mb-4"></i>
+        <h3 class="text-xl font-bold">Ventes & Clients</h3>
+        <p class="mt-2 opacity-90">Factures, paiements, livraisons</p>
+    </a>
+
+    <a href="{% url 'rapport_rendement' %}" class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white rounded-xl p-8 text-center hover:transform hover:scale-105 transition shadow-lg">
+        <i class="fas fa-chart-line text-5xl mb-4"></i>
+        <h3 class="text-xl font-bold">Rapports & Statistiques</h3>
+        <p class="mt-2 opacity-90">Rendement, coûts, bénéfices</p>
+    </a>
+</div>
 {% endblock %}
