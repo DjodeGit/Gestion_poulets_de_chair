@@ -340,7 +340,7 @@ class User(AbstractUser):
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='poulets_user_permissions',
+        related_name='poulets_ "user_permissions',
         blank=True,
     )
 
