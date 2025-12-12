@@ -328,21 +328,69 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
-        default='employe',
+        default='client',
         verbose_name="Rôle"
     )
 
-    # Résout le clash avec auth.User
+    # On désactive proprement les relations inverses pour éviter tout clash
     groups = models.ManyToManyField(
         'auth.Group',
-        related_name='poulets_user_groups',
+        related_name='+',      # pas de relation inverse = zéro risque de clash
         blank=True,
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='poulets_ "user_permissions',
+        related_name='+',      # même chose
         blank=True,
     )
 
     def __str__(self):
         return self.username
+
+# === 1. ACHAT & APPROVISIONNEMENT ===
+class Fournisseur(models.Model):
+    nom = models.CharField(max_length=100)
+    telephone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True)
+    adresse = models.TextField(blank=True)
+
+    def __str__(self): return self.nom
+
+class CommandeFournisseur(models.Model):
+    numero = models.CharField(max_length=20, unique=True)
+    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.PROTECT)
+    date_commande = models.DateField(auto_now_add=True)
+    date_livraison_prevue = models.DateField()
+    statut = models.CharField(max_length=20, choices=[
+        ('brouillon', 'Brouillon'),
+        ('envoyee', 'Envoyée'),
+        ('recue', 'Reçue'),
+    ], default='brouillon')
+    montant_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+# === 2. VENTES & MARKETING ===
+class ProduitVente(models.Model):
+    nom = models.CharField(max_length=100)
+    description = models.TextField()
+    prix_kg = models.DecimalField(max_digits=8, decimal_places=2)
+    en_stock = models.BooleanField(default=True)
+    photo = models.ImageField(upload_to='produits/', blank=True)
+
+    def __str__(self): return self.nom
+
+class CommandeClient(models.Model):
+    numero = models.CharField(max_length=20, unique=True)
+    client_nom = models.CharField(max_length=100)
+    client_telephone = models.CharField(max_length=20)
+    produits = models.ManyToManyField(ProduitVente, through='LigneCommande')
+    date_commande = models.DateTimeField(auto_now_add=True)
+    statut = models.CharField(max_length=20, choices=[
+        ('en_attente', 'En attente'),
+        ('confirmee', 'Confirmée'),
+        ('livree', 'Livrée'),
+    ], default='en_attente')
+
+class LigneCommande(models.Model):
+    commande = models.ForeignKey(CommandeClient, on_delete=models.CASCADE)
+    produit = models.ForeignKey(ProduitVente, on_delete=models.PROTECT)
+    quantite_kg = models.DecimalField(max_digits=8, decimal_places=2)
