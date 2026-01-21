@@ -1,10 +1,15 @@
+from pyexpat.errors import messages
+from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
+from django.db.models import Sum
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Bande, Pesee, Mortalite, Alimentation,Stock,Vente
+from .models import Bande, Pesee, Mortalite, Alimentation,Stock,Vente,ProduitVente
 from django.contrib.auth.decorators import login_required
 import datetime
+
+from poulets_app import models
 
 # Create your views here.
 def test_base(request):
@@ -135,7 +140,7 @@ class VenteListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_ventes_mois'] = Vente.objects.filter(
-            date_vente__month=date.today().month,
+            date_vente__month=datetime.date.today().month,
             statut__in=['confirmee', 'payee']
         ).aggregate(t=models.Sum('montant_total'))['t'] or 0
         return context
@@ -162,6 +167,7 @@ class DecesListView(LoginRequiredMixin, ListView):
 
         if q:
             qs = qs.filter(
+                
                 models.Q(bande__numero__icontains=q) |
                 models.Q(bande__gamme__nom__icontains=q)
             )
@@ -175,7 +181,7 @@ class DecesListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from django.db.models import Sum
-        today = date.today()
+        today = datetime.date.today()
         
         context['total_mois'] = Mortalite.objects.filter(
             date__month=today.month,
@@ -185,7 +191,7 @@ class DecesListView(LoginRequiredMixin, ListView):
         context['total_aujourdhui'] = Mortalite.objects.filter(date=today).aggregate(total=Sum('nombre'))['total'] or 0
         
         context['bandes'] = Bande.objects.filter(statut='en_croissance')
-     
+    
 # Rapport rendement (interne)
 def rapport_rendement(request):
     if not request.user.is_authenticated or request.user.role not in ['employé', 'admin']:
@@ -194,15 +200,12 @@ def rapport_rendement(request):
 
 # Logout
 def logout_view(request):
-    auth_logout(request)
+    auth_logout(request) # type: ignore
     messages.success(request, 'Déconnexion réussie.')
     return HttpResponseRedirect('/login/')
 
 # Vues client (exemples pour conditional nav)
-def catalogue(request):
-    if not request.user.is_authenticated or request.user.role != 'client':
-        return HttpResponseRedirect('/login/')
-    return render(request, 'poulets_app/catalogue.html', {'title': 'Catalogue'})
+
 
 def mes_commandes(request):
     if not request.user.is_authenticated or request.user.role != 'client':
@@ -219,3 +222,27 @@ def login_view(request):
 # Inscription client stub
 def inscription_client(request):
     return render(request, 'poulets_app/inscription_client.html', {'title': 'Inscription'})
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class CatalogueView(LoginRequiredMixin, ListView):
+    template_name = 'poulets_app/catalogue.html'
+    context_object_name = 'bandes'
+
+    def get_queryset(self):
+        return Bande.objects.filter(statut='prete').order_by('-date_arrivee')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['produits_transformes'] = ProduitVente.objects.filter(en_stock=True)
+
+        # Calcul de la mortalité totale pour chaque bande
+        for bande in context['bandes']:
+            total = bande.mortalite_set.aggregate(total=Sum('nombre'))['total']
+            bande.mortalite_totale = total or 0
+
+            # Poids moyen (dernière pesée)
+            last_pesee = bande.pesee_set.last()
+            bande.poids_moyen = last_pesee.poids_moyen if last_pesee else 0
+
+        return context

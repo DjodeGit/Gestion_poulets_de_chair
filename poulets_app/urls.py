@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import BandeListView,StockListView,StockDetailView,VenteListView,DecesListView
+from .views import BandeListView,StockListView,StockDetailView,VenteListView,DecesListView,CatalogueView
 
 urlpatterns = [
     path('', views.test_base, name='test_base'),
@@ -13,7 +13,7 @@ urlpatterns = [
     path('rapports/rendement/', views.rapport_rendement, name='rapport_rendement'),
     path('logout/', views.logout_view, name='logout'),
     # Vues client
-    path('catalogue/', views.catalogue, name='catalogue'),
+    path('catalogue/', CatalogueView.as_view(), name='catalogue'),
     path('mes-commandes/', views.mes_commandes, name='mes_commandes'),
     path('support/', views.support, name='support'),
     path('login/', views.login_view, name='login'),
