@@ -1,6 +1,159 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Catalogue – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>catalogue Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+  <!-- Header hero -->
+  <div class="relative overflow-hidden py-20 px-6">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-red-600 rounded-full blur-3xl opacity-20"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-red-800 rounded-full blur-3xl opacity-20"></div>
+    </div>
+
+    <div class="max-w-5xl mx-auto text-center">
+      <h1 class="text-5xl md:text-7xl font-black text-gray-900 mb-6">
+        Nos <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800">Poulets de Chair</span>
+      </h1>
+      <p class="text-2xl text-gray-600 mb-8">
+        Élevage contrôlé • Qualité premium • Livraison rapide dans tout le Cameroun
+      </p>
+      <div class="flex justify-center gap-4">
+        <span class="bg-green-100 text-green-800 px-6 py-3 rounded-full font-bold">Traçabilité totale</span>
+        <span class="bg-blue-100 text-blue-800 px-6 py-3 rounded-full font-bold">Sans antibiotiques de croissance</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onglets -->
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex justify-center mb-12">
+      <div class="bg-white rounded-full shadow-2xl p-2 flex">
+        <button onclick="showTab('vivants')" id="btn-vivants" class="tab-btn active">
+          Poulets vivants
+        </button>
+        <button onclick="showTab('transformes')" id="btn-transformes" class="tab-btn">
+          Produits transformés
+        </button>
+      </div>
+    </div>
+
+    <!-- POULETS VIVANTS -->
+    <div id="vivants" class="tab-content">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {% for bande in bandes %}
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500 border border-gray-100">
+          <!-- Photo + infos bande -->
+          <div class="relative h-72 bg-gradient-to-br from-red-600 to-red-800">
+            <div class="absolute inset-0 bg-black opacity-30"></div>
+            <div class="absolute bottom-6 left-6 text-white">
+              <p class="text-5xl font-black">#{{ bande.id }}</p>
+              <p class="text-2xl font-bold">{{ bande.gamme }}</p>
+              <p class="text-lg opacity-90">{{ bande.batiment }}</p>
+            </div>
+            <div class="absolute top-6 right-6 bg-white text-red-600 px-5 py-3 rounded-full font-bold shadow-lg">
+              {{ bande.age_jours }} jours
+            </div>
+            <div class="absolute top-6 left-6 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-bold">
+              DISPONIBLE
+            </div>
+          </div>
+
+          <!-- Détails -->
+          <div class="p-8">
+            <div class="grid grid-cols-3 gap-4 text-center mb-8">
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-gray-500 text-sm">Effectif actuel</p>
+                <p class="text-3xl font-black text-gray-900">{{ bande.quantite_actuelle }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-gray-500 text-sm">Poids moyen</p>
+                <p class="text-3xl font-black text-gray-900">
+                  {{ bande.poids_moyen|floatformat:2 }} kg
+                </p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-gray-500 text-sm">Mortalité totale</p>
+                <p class="text-3xl font-black text-red-600">
+                  {{ bande.mortalite_totale }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Prix + commande -->
+            <div class="flex items-end justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Prix au kg (HT)</p>
+                <p class="text-5xl font-black text-red-600">2 900 <span class="text-2xl">FCFA</span></p>
+                <p class="text-sm text-gray-500 mt-1">Livraison incluse (Douala & environs)</p>
+              </div>
+              <!--<a href="{% url 'commander-bande' bande.id %}" class="px-12 py-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-black text-2xl rounded-2xl shadow-2xl hover:from-red-700 hover:to-red-800 transform hover:-translate-y-1 transition">
+                Commander
+              </a>-->
+              <a href="#" class="px-12 py-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-black text-2xl rounded-2xl shadow-2xl hover:from-red-700 hover:to-red-800 transform hover:-translate-y-1 transition opacity-50 cursor-not-allowed">
+                Bientôt disponible
+              </a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-32">
+          <i class="fas fa-dove text-9xl text-gray-300 mb-8"></i>
+          <p class="text-4xl font-bold text-gray-600">Aucune bande disponible actuellement</p>
+          <p class="text-xl text-gray-500 mt-4">Revenez dans quelques jours – de nouvelles bandes arrivent bientôt !</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- PRODUITS TRANSFORMÉS -->
+    <div id="transformes" class="tab-content hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        {% for produit in produits_transformes %}
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300">
+          <div class="h-56 bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+            <i class="fas fa-drumstick-bite text-8xl text-white opacity-90"></i>
+          </div>
+          <div class="p-8 text-center">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ produit.nom }}</h3>
+            <p class="text-gray-600 mb-6">{{ produit.description|truncatewords:15 }}</p>
+            <p class="text-5xl font-black text-red-600 mb-8">
+              {{ produit.prix_kg|intcomma }} <span class="text-2xl">FCFA/kg</span>
+            </p>
+            <button class="w-full py-4 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-lg">
+              Ajouter au panier
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-20">
+          <p class="text-3xl text-gray-600">Produits transformés bientôt disponibles</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tab-btn {
+    @apply px-12 py-5 text-xl font-bold rounded-full transition-all duration-300;
+  }
+  .tab-btn.active {
+    @apply bg-red-600 text-white shadow-2xl;
+  }
+  .tab-btn:not(.active) {
+    @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+  }
+</style>
+
+<script>
+  function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tab).classList.remove('hidden');
+    document.getElementById('btn-' + tab).classList.add('active');
+  }
+</script>
 {% endblock %}
