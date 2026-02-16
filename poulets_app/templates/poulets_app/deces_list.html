@@ -1,6 +1,43 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Liste des mortalités – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>deces_list Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="max-w-7xl mx-auto py-12 px-6">
+  <h1 class="text-4xl font-black text-gray-900 mb-10 text-center">Mortalités enregistrées</h1>
+
+  <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-8 py-5 text-left text-sm font-semibold text-gray-600">Bande</th>
+          <th class="px-8 py-5 text-left text-sm font-semibold text-gray-600">Date</th>
+          <th class="px-8 py-5 text-left text-sm font-semibold text-gray-600">Nombre</th>
+          <th class="px-8 py-5 text-left text-sm font-semibold text-gray-600">Cause</th>
+          <th class="px-8 py-5 text-left text-sm font-semibold text-gray-600">Notes</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for deces in deces %}
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-8 py-5 whitespace-nowrap">
+              <a href="{% url 'bande-detail' deces.bande.id %}" class="text-red-600 hover:underline">#{{ deces.bande.numero }}</a>
+            </td>
+            <td class="px-8 py-5 whitespace-nowrap">{{ deces.date|date:"d/m/Y" }}</td>
+            <td class="px-8 py-5 whitespace-nowrap text-red-600 font-bold">{{ deces.nombre }}</td>
+            <td class="px-8 py-5 whitespace-nowrap">{{ deces.get_cause_display }}</td>
+            <td class="px-8 py-5">{{ deces.notes|truncatewords:10|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="px-8 py-20 text-center text-gray-600 text-xl">
+              Aucune mortalité enregistrée
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

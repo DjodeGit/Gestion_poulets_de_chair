@@ -1,6 +1,63 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Mettre à jour stock – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>stock_form Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="max-w-4xl mx-auto py-12 px-6">
+  <h1 class="text-4xl font-black text-gray-900 mb-12 text-center">
+    Mettre à jour le stock
+  </h1>
+
+  <div class="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
+    <form method="post" class="space-y-8">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-gray-700 font-medium text-xl mb-4">Nom de l'article</label>
+        <input type="text" name="nom" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Type d'aliment</label>
+          <select name="type_aliment" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+            <option value="">Choisir</option>
+            <option value="demarrage">Démarrage</option>
+            <option value="croissance">Croissance</option>
+            <option value="finition">Finition</option>
+            <option value="pre_finition">Pré-finition</option>
+            <option value="medicament">Médicament</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Unité</label>
+          <select name="unite" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+            <option value="kg">kg</option>
+            <option value="sac">sac</option>
+            <option value="litre">litre</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Quantité actuelle</label>
+          <input type="number" name="quantite_actuelle" step="0.1" min="0" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Seuil d'alerte</label>
+          <input type="number" name="seuil_alerte" step="0.1" min="0" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+        </div>
+      </div>
+
+      <button type="submit" class="w-full py-6 bg-gradient-to-r from-red-600 to-red-800 text-white font-black text-2xl rounded-2xl shadow-2xl hover:from-red-700 hover:to-red-900 transition mt-8">
+        Enregistrer
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}

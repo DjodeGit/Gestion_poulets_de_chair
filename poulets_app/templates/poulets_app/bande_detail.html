@@ -1,6 +1,65 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Bande #{{ bande.numero }} – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>bande_detail Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="max-w-6xl mx-auto py-12 px-6">
+  <h1 class="text-5xl font-black text-gray-900 mb-12 text-center">
+    Bande #{{ bande.numero }}
+  </h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <!-- Infos principales -->
+    <div class="lg:col-span-2 bg-white rounded-3xl shadow-2xl p-10">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-10">
+        <div>
+          <p class="text-gray-500">Gamme</p>
+          <p class="text-3xl font-bold">{{ bande.gamme }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500">Statut</p>
+          <span class="px-5 py-2 rounded-full text-lg font-bold
+            {% if bande.statut == 'croissance' %}bg-blue-100 text-blue-800
+            {% elif bande.statut == 'prete' %}bg-green-100 text-green-800
+            {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ bande.get_statut_display }}
+          </span>
+        </div>
+        <div>
+          <p class="text-gray-500">Effectif actuel</p>
+          <p class="text-3xl font-bold text-gray-900">{{ bande.quantite_actuelle }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500">Âge</p>
+          <p class="text-3xl font-bold">{{ bande.age_jours }} jours</p>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 pt-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Historique récent</h2>
+        <!-- Placeholder pour pesées / mortalité -->
+        <div class="bg-gray-50 rounded-xl p-6 text-center text-gray-600">
+          Historique des pesées et mortalités (en cours d'intégration)
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="bg-white rounded-3xl shadow-2xl p-10">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Actions rapides</h2>
+      <div class="space-y-6">
+        <a href="{% url 'pesee-create' %}" class="block py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-xl text-center rounded-xl hover:from-blue-700 hover:to-blue-800 transition">
+          Déclarer pesée
+        </a>
+        <a href="{% url 'mortalite-create' %}" class="block py-5 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold text-xl text-center rounded-xl hover:from-red-700 hover:to-red-800 transition">
+          Déclarer mortalité
+        </a>
+        <a href="{% url 'alimentation-create' %}" class="block py-5 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold text-xl text-center rounded-xl hover:from-green-700 hover:to-green-800 transition">
+          Déclarer alimentation
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

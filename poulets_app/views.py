@@ -246,3 +246,169 @@ class CatalogueView(LoginRequiredMixin, ListView):
             bande.poids_moyen = last_pesee.poids_moyen if last_pesee else 0
 
         return context
+    
+
+#profile
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'poulets_app/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+    
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import get_user_model
+from django.urls import reverse_lazy
+from django.db.models import Sum, Max
+from django.contrib import messages
+
+from .models import (
+    Bande, Pesee, Mortalite, Alimentation, Stock, Vente, CommandeClient, ProduitVente
+)
+
+User = get_user_model()
+
+
+# ────────────────────────────────────────────────
+# DASHBOARD
+# ────────────────────────────────────────────────
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'poulets_app/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        if user.role == 'admin':
+            context['bandes_actives'] = Bande.objects.filter(statut='croissance').count()
+            context['mortalite_recente'] = Mortalite.objects.filter(date__gte=timezone.now() - timedelta(days=7)).aggregate(Sum('nombre'))['nombre__sum'] or 0
+            context['stocks_critiques'] = Stock.objects.filter(quantite_actuelle__lte=F('seuil_alerte')).count()
+        else:
+            # Employé : seulement ses bandes
+            context['bandes_actives'] = Bande.objects.filter(employe_responsable=user, statut='croissance').count()
+            context['mortalite_recente'] = Mortalite.objects.filter(bande__employe_responsable=user, date__gte=timezone.now() - timedelta(days=7)).aggregate(Sum('nombre'))['nombre__sum'] or 0
+            context['stocks_critiques'] = 0  # ou filtre spécifique si besoin
+
+        return context
+
+
+# ────────────────────────────────────────────────
+# BANDES
+# ────────────────────────────────────────────────
+class BandeListView(LoginRequiredMixin, ListView):
+    model = Bande
+    template_name = 'poulets_app/bande_list.html'
+    context_object_name = 'bandes'
+
+    def get_queryset(self):
+        if self.request.user.role == 'employe':
+            return Bande.objects.filter(employe_responsable=self.request.user)
+        return Bande.objects.all()
+
+
+class BandeDetailView(LoginRequiredMixin, DetailView):
+    model = Bande
+    template_name = 'poulets_app/bande_detail.html'
+    context_object_name = 'bande'
+
+
+class BandeCreateView(LoginRequiredMixin, CreateView):
+    model = Bande
+    template_name = 'poulets_app/bande_form.html'
+    fields = ['numero', 'gamme', 'date_arrivee', 'nb_poulets_init', 'batiment']
+    success_url = reverse_lazy('bande-list')
+
+
+# ────────────────────────────────────────────────
+# STOCKS
+# ────────────────────────────────────────────────
+class StockListView(LoginRequiredMixin, ListView):
+    model = Stock
+    template_name = 'poulets_app/stock_list.html'
+    context_object_name = 'articles'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        articles = context['articles']
+        context['articles_en_rupture'] = [a for a in articles if a.est_en_rupture]
+        context['total_stock_kg'] = sum(a.quantite_actuelle for a in articles if a.unite == 'kg')
+        context['derniere_modif'] = Stock.objects.aggregate(max_date=Max('updated_at'))['max_date']
+        context['types_aliment'] = Stock.objects.values('type_aliment').distinct().count()
+        return context
+
+
+# ────────────────────────────────────────────────
+# VENTES
+# ────────────────────────────────────────────────
+class VenteListView(LoginRequiredMixin, ListView):
+    model = Vente
+    template_name = 'poulets_app/vente_list.html'
+    context_object_name = 'ventes'
+
+
+# ────────────────────────────────────────────────
+# MORTALITÉS
+# ────────────────────────────────────────────────
+class DecesListView(LoginRequiredMixin, ListView):
+    model = Mortalite
+    template_name = 'poulets_app/deces_list.html'
+    context_object_name = 'deces'
+
+
+# ────────────────────────────────────────────────
+# CATALOGUE & COMMANDES CLIENT
+# ────────────────────────────────────────────────
+class CatalogueView(LoginRequiredMixin, ListView):
+    model = ProduitVente
+    template_name = 'poulets_app/catalogue.html'
+    context_object_name = 'produits'
+
+    def get_queryset(self):
+        return ProduitVente.objects.filter(en_stock=True)
+
+
+class MesCommandesView(LoginRequiredMixin, ListView):
+    model = CommandeClient
+    template_name = 'poulets_app/mes_commandes.html'
+    context_object_name = 'commandes'
+
+    def get_queryset(self):
+        return CommandeClient.objects.filter(client=self.request.user)
+
+
+# ────────────────────────────────────────────────
+# PROFIL UTILISATEUR
+# ────────────────────────────────────────────────
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'poulets_app/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+
+
+# ────────────────────────────────────────────────
+# AUTRES PAGES STATIQUES / SEMI-DYNAMIQUES
+# ────────────────────────────────────────────────
+class SupportView(TemplateView):
+    template_name = 'poulets_app/support.html'
+
+
+class RapportRendementView(LoginRequiredMixin, TemplateView):
+    template_name = 'poulets_app/rapport_rendement.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['rendement_moyen'] = 94.8  # À remplacer par un vrai calcul
+        return context

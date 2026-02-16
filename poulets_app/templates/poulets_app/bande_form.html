@@ -1,6 +1,49 @@
-{% extends 'poulets_app/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% extends "poulets_app/base.html" %}
+{% load static %}
+
+{% block title %}Nouvelle bande – DjodeSync{% endblock %}
+
 {% block content %}
-<h2>bande_form Interne</h2>
-<p>Résumé KPIs à venir.</p>
+<div class="max-w-4xl mx-auto py-12 px-6">
+  <h1 class="text-4xl font-black text-gray-900 mb-12 text-center">
+    {% if bande %}Modifier bande #{{ bande.numero }}{% else %}Nouvelle bande{% endif %}
+  </h1>
+
+  <div class="bg-white rounded-3xl shadow-2xl p-10">
+    <form method="post" class="space-y-8">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-gray-700 font-medium text-xl mb-4">Numéro de bande</label>
+        <input type="text" name="numero" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Date d'arrivée</label>
+          <input type="date" name="date_arrivee" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium text-xl mb-4">Nombre de poussins</label>
+          <input type="number" name="nb_poulets_init" min="1" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium text-xl mb-4">Gamme</label>
+        <select name="gamme" required class="w-full px-6 py-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 text-lg">
+          <option value="">Choisir la gamme</option>
+          <!-- À remplacer par tes données réelles -->
+          <option value="broiler">Broiler</option>
+          <option value="chair">Chair</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full py-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-black text-2xl rounded-2xl shadow-2xl hover:from-red-700 hover:to-red-800 transition mt-8">
+        Enregistrer la bande
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}

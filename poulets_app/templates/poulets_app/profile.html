@@ -1,0 +1,44 @@
+{% extends "poulets_app/base.html" %}
+
+{% block title %}Mon profil – DjodeSync{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-6">
+  <h1 class="text-4xl font-black text-gray-900 mb-12 text-center">Mon profil</h1>
+
+  <div class="bg-white rounded-3xl shadow-2xl p-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div class="space-y-6">
+        <div>
+          <p class="text-gray-600 text-lg">Nom d'utilisateur</p>
+          <p class="text-3xl font-bold text-gray-900">{{ user.username }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 text-lg">Rôle</p>
+          <span class="inline-flex px-4 py-2 rounded-full text-xl font-semibold
+            {% if user.role == 'admin' %}bg-red-100 text-red-800
+            {% elif user.role == 'employe' %}bg-blue-100 text-blue-800
+            {% else %}bg-green-100 text-green-800{% endif %}">
+            {{ user.get_role_display }}
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <p class="text-gray-600 text-lg">Email</p>
+          <p class="text-3xl font-bold text-gray-900">{{ user.email|default:"Non renseigné" }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 text-lg">Date d'inscription</p>
+          <p class="text-3xl font-bold text-gray-900">{{ user.date_joined|date:"d/m/Y" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 text-center">
+      <p class="text-gray-500 italic">Fonctionnalité de modification en cours de développement</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
