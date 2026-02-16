@@ -30,7 +30,14 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = [
+    "gestion-poulets-de-chair.onrender.com",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://gestion-poulets-de-chair.onrender.com",
+]
 
 AUTH_USER_MODEL = 'poulets_app.User'
 # Application definition
